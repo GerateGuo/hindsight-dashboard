@@ -1,5 +1,7 @@
 # Hindsight Dashboard
 
+**English** · [简体中文](README.zh-CN.md)
+
 [![CI](https://github.com/GerateGuo/hindsight-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/GerateGuo/hindsight-dashboard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
@@ -138,16 +140,9 @@ this test green and dependency-free.
 - **Iframe embedding works** because the official Control Plane sends no `X-Frame-Options` / `frame-ancestors` — if that changes upstream, the "Official UI" tab will need a link instead.
 - **Plain HTTP.** The key travels in cleartext over your LAN. If that matters, bind to a VPN interface (e.g. Tailscale) or put it behind TLS.
 
-## 中文说明
+## 中文文档 / Chinese docs
 
-自托管的 Hindsight 只有 Swagger（`/docs`）和 Prometheus（`/metrics`），官方 Control Plane 是另一个独立的 Next.js 前端。这个单文件面板是两者的轻量补充：**纯 Python 标准库、零依赖**，把 Hindsight 的 REST 接口聚合成一个可视界面（概览、检索打分、实体图谱、LLM 用量、失败任务一键重试、配置查看），并可以把官方界面 iframe 内嵌进来。
-
-```bash
-python3 hindsight-dashboard.py --api http://localhost:8888 --bank my-bank
-# 打开 http://127.0.0.1:8990
-```
-
-安全默认值：只监听 `127.0.0.1`；用 `--host 0.0.0.0` 暴露到局域网时建议配访问密钥（本机免密），远程写操作默认被拒（`--allow-remote-write` 可放开）。**另外记得把 Hindsight 本体也绑到回环地址**——它的 REST 接口没有认证，端口一旦可达，同网段任何人都能读取或清空全部记忆。
+完整中文说明在 **[README.zh-CN.md](README.zh-CN.md)**。
 
 ## License
 
