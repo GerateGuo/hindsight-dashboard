@@ -1,5 +1,10 @@
 # Hindsight Dashboard
 
+[![CI](https://github.com/GerateGuo/hindsight-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/GerateGuo/hindsight-dashboard/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
+![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen)
+
 A **single-file, zero-dependency** web dashboard for [Hindsight](https://github.com/vectorize-io/hindsight) — the agent memory system from Vectorize.
 
 No `pip install`, no build step, no Node. One Python file using only the standard library, talking to Hindsight's REST API.
@@ -111,6 +116,19 @@ python3 hindsight-dashboard.py --api http://localhost:8899 --bank atlas --port 8
 ```
 
 All screenshots in this README were produced against that mock.
+
+### Tests
+
+`dev/smoke_test.py` starts the mock API plus a dashboard instance and exercises every
+endpoint the UI depends on, then unit-checks the access-key logic. No dependencies, no
+network access, ~15 seconds:
+
+```bash
+python3 dev/smoke_test.py
+```
+
+It is what CI runs, on Python 3.9 / 3.11 / 3.13. Contributions are welcome — please keep
+this test green and dependency-free.
 
 ## Gotchas worth knowing
 

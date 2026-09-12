@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 零依赖：只做语法检查 + 端到端自检，不安装任何第三方包
+      - name: Syntax check
+        run: python -m py_compile hindsight-dashboard.py dev/mock_hindsight_api.py dev/smoke_test.py
+
+      - name: End-to-end smoke test
+        run: python dev/smoke_test.py
+
+  lint:
+    name: Basic hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fail if a secret-ish file sneaks in
+        run: |
+          if git ls-files | grep -Ei '(^|/)(access-key|\.env|secrets?|credentials?)' ; then
+            echo "::error::A credential-like file is tracked. Remove it."
+            exit 1
+          fi
+          echo "No credential-like files tracked."
+
+      - name: Compile all Python files
+        run: python -m compileall -q . && echo "compileall OK"

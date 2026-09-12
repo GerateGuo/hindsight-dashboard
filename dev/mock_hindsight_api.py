@@ -108,30 +108,34 @@ def llm_requests(limit, offset, status=""):
 
 
 def operations(limit, offset, status="", exclude_parents=False):
+    """先把 42 条全量构造出来，再按状态过滤，最后才分页。
+
+    修改原因：早先版本在循环里边生成边按索引跳过，导致 (a) status=failed 且 limit 很小时
+    一条都筛不出来，(b) offset 语义在过滤后错位。
+    """
     now = datetime.now(timezone.utc)
-    items = []
-    for i in range(offset, min(offset + limit, 42)):
+    all_ops = []
+    for i in range(42):
         r = rnd(2000 + i)
         t = OPS_TYPES[i % len(OPS_TYPES)]
-        if status == "failed":
-            if i % 7 != 3:
-                continue
+        if i % 7 == 3:
             st = "failed"
-        elif status:
-            st = status
         else:
             st = ["completed", "completed", "completed", "processing", "pending"][i % 5]
         created = now - timedelta(minutes=13 * i + 2)
-        items.append({
+        all_ops.append({
             "id": f"op-{i:04d}", "task_type": t, "items_count": 1 if "retain" in t else 0,
             "document_id": None, "filename": None, "created_at": iso(created),
             "updated_at": iso(created + timedelta(seconds=20 + r.randint(0, 90))),
             "status": st,
             "error_message": ("Fact extraction failed: upstream connection reset" if st == "failed" else None),
-            "retry_count": 0 if st != "failed" else 2,
+            "retry_count": 2 if st == "failed" else 0,
             "next_retry_at": None, "progress": None,
         })
-    return {"bank_id": BANK, "total": 42, "limit": limit, "offset": offset, "operations": items}
+    if status:
+        all_ops = [o for o in all_ops if o["status"] == status]
+    return {"bank_id": BANK, "total": len(all_ops), "limit": limit, "offset": offset,
+            "operations": all_ops[offset:offset + limit]}
 
 
 def memories_list(limit, offset, q="", ftype=""):

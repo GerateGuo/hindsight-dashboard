@@ -1094,8 +1094,12 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             return self._send(200, PAGE, "text/html; charset=utf-8", extra_headers=extra)
         if path == "/docs":
+            # 跳转到 Hindsight 自带的 Swagger。目标主机跟随请求方 Host，
+            # 否则从别的机器/手机访问时会被重定向到「它自己的 localhost」，永远打不开。
+            req_host = (self.headers.get("Host") or "").split(":")[0] or "localhost"
+            api_port = urllib.parse.urlparse(api).port or 8888
             self.send_response(302)
-            self.send_header("Location", api + "/docs")
+            self.send_header("Location", f"http://{req_host}:{api_port}/docs")
             self.end_headers()
             return
         if path == "/metrics-ui":
