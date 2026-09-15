@@ -19,6 +19,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -142,6 +143,9 @@ def test_end_to_end(verbose):
     env = dict(os.environ)
     env["HS_DASH_CONFIG_JSON"] = os.path.join(ROOT, "no-such-config.json")   # 避免读到本机配置
     env["HS_DASH_KEY_FILE"] = os.path.join(ROOT, "no-such-key.txt")          # 避免启用密钥门
+    # 外观与桥都指向临时/不存在的路径：测试不碰本机真实数据，结果也与跑测试的机器无关
+    env["HS_DASH_UI_DIR"] = tempfile.mkdtemp(prefix="hs-dash-ui-")
+    env["HS_DASH_BRIDGE_PY"] = os.path.join(ROOT, "no-such-bridge.py")
     env.pop("HTTP_PROXY", None)
     env.pop("HTTPS_PROXY", None)
 
@@ -205,6 +209,55 @@ def test_end_to_end(verbose):
 
         st, _ = http(f"{base}/api/memories")   # bank 缺省时用服务端默认库
         check("接口：缺省 bank 参数不报 500", st in (200, 404), f"HTTP {st}")
+
+        # ---------------- 外观（自定义背景 · 多图库）----------------
+        st, d = http(f"{base}/api/ui?bank={BANK}")
+        ui = ((d or {}).get("ui") or {}).get("background") if isinstance(d, dict) else None
+        check("外观：/api/ui 返回偏好与图库",
+              st == 200 and isinstance(ui, dict) and isinstance((d or {}).get("images"), list), f"HTTP {st}")
+
+        http(f"{base}/api/ui?bank={BANK}", "POST", {"pos": "top left"})
+        st, d = http(f"{base}/api/ui?bank={BANK}")
+        got = ((((d or {}).get("ui") or {}).get("background") or {}).get("pos"))
+        # 回归守卫：位置校验必须「按关键字归轴」。曾经它假定第一段是 x 轴，于是九宫格给的
+        # "top left" 被判非法、静默退回 center center —— 九个按钮表面能用、实际全失效。
+        check("外观：位置 top left 存得进也读得回", got == "left top", f"读回 pos={got}")
+
+        http(f"{base}/api/ui?bank={BANK}", "POST", {"pos": "wherever"})
+        st, d = http(f"{base}/api/ui?bank={BANK}")
+        got = ((((d or {}).get("ui") or {}).get("background") or {}).get("pos"))
+        check("外观：非法位置回退 center center", got == "center center", f"pos={got}")
+
+        png = bytes.fromhex("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+                            "0000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082")
+        try:
+            req = urllib.request.Request(f"{base}/api/ui/image?name=smoke.png", data=png,
+                                         headers={"Content-Type": "image/png"}, method="POST")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                st, up = resp.status, json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            st, up = e.code, {}
+        check("外观：壁纸上传（按魔数判类型）",
+              st == 200 and up.get("ok") is True and up.get("type") == "image/png",
+              f"HTTP {st} {up.get('error') or ''}")
+        name = up.get("name")
+        try:
+            with urllib.request.urlopen(f"{base}/bg/{name}", timeout=20) as resp:
+                st2, raw = resp.status, resp.read()
+        except urllib.error.HTTPError as e:
+            st2, raw = e.code, b""
+        check("外观：/bg/ 取回同一张图", st2 == 200 and raw == png, f"HTTP {st2} bytes={len(raw)}")
+        st3, _ = http(f"{base}/bg/..%2F..%2Fdashboard-ui.json")
+        check("外观：路径穿越被挡", st3 == 404, f"HTTP {st3}")
+        http(f"{base}/api/ui/image/delete?bank={BANK}", "POST", {"name": name})
+        st4, _ = http(f"{base}/bg/{name}")
+        check("外观：删除后图片取不到", st4 == 404, f"HTTP {st4}")
+
+        # ---------------- dsh 桥（未配置时应自报 configured=false）----------------
+        st, d = http(f"{base}/api/bridge?bank={BANK}")
+        check("桥：未配置时 configured=false（前端据此隐藏标签）",
+              st == 200 and isinstance(d, dict) and d.get("configured") is False,
+              f"HTTP {st} configured={(d or {}).get('configured')}")
 
         # 静态资源与深链接
         for path, label in [("/", "首页 HTML"), ("/metrics-ui", "原始 metrics 页")]:

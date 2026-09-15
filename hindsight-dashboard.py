@@ -239,97 +239,172 @@ PAGE = r"""<!DOCTYPE html>
 <title>Hindsight 控制面板</title>
 <style>
   :root{
-    --bg:#0e1117; --panel:#161b24; --panel2:#1c2230; --line:#28303f;
-    --fg:#e6ebf5; --muted:#8b97ab; --accent:#7c9cff; --ok:#43d19e;
-    --warn:#f5b544; --bad:#f2637b; --obs:#c48bff;
+    /* 与中转站（9111）同一套 GitHub Dark：色板、字阶、圆角、交互色全部对齐 */
+    color-scheme:dark;
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --line:#30363d;
+    --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --ok:#3fb950;
+    --warn:#d29922; --bad:#f85149; --obs:#bc8cff;
+    --hover:#6e7681; --row:#21262d;
+    --gap:12px; --t:15px; --b:13px; --n:11.5px; --num:26px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-       font:14px/1.55 -apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--fg);font-size:var(--b);line-height:1.55;
+       font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif}
   a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  .wrap{max-width:1240px;margin:0 auto;padding:18px 20px 60px}
-  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-  h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.3px}
-  .pill{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);
-        background:var(--panel);color:var(--muted);white-space:nowrap}
-  .pill.ok{color:var(--ok);border-color:#1e5c47}
-  .pill.bad{color:var(--bad);border-color:#5c2033}
+  .wrap{max-width:1400px;margin:0 auto;padding:0 18px 60px}
+  header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+         position:sticky;top:0;z-index:20;background:var(--panel);
+         margin:0 -18px 14px;padding:12px 18px;border-bottom:1px solid var(--line)}
+  h1{font-size:var(--t);margin:0 10px 0 0;font-weight:600;letter-spacing:.2px}
+  .pill{font-size:var(--n);padding:2px 10px;border-radius:999px;border:1px solid var(--line);
+        background:var(--panel2);color:var(--muted);white-space:nowrap;
+        display:inline-flex;align-items:center;min-height:24px}
+  .pill.ok{color:var(--ok);border-color:#238636}
+  .pill.bad{color:var(--bad);border-color:#8b2c26}
   .spacer{flex:1}
   button,select,input[type=text],input[type=number]{background:var(--panel2);color:var(--fg);
-    border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px;font-family:inherit}
+    border:1px solid var(--line);border-radius:7px;padding:6px 11px;font-size:var(--n);
+    font-family:inherit;min-height:32px}
   button{cursor:pointer}
-  button:hover{border-color:var(--accent);color:#fff}
-  button:disabled{opacity:.5;cursor:default}
-  button.primary{background:#243056;border-color:#3a4c86}
+  button:hover{border-color:var(--hover);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:#233043;border-color:#3d5573;color:var(--fg)}
   select{cursor:pointer}
-  nav{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
-  nav button{background:transparent;border:none;border-bottom:2px solid transparent;border-radius:0;
-    padding:8px 14px;color:var(--muted);font-size:13.5px}
-  nav button:hover{color:var(--fg)}
-  nav button.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+  nav{display:flex;gap:6px;flex-wrap:wrap;overflow-x:auto;margin-bottom:14px;padding-bottom:2px}
+  nav button{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    padding:7px 12px;color:var(--fg);font-size:var(--n);min-height:34px;white-space:nowrap}
+  nav button:hover{border-color:var(--hover);color:var(--fg)}
+  nav button.on{background:var(--panel2);border-color:var(--hover);color:var(--fg);font-weight:600}
   .tab{display:none} .tab.on{display:block}
-  .grid{display:grid;gap:12px}
-  .cards{grid-template-columns:repeat(auto-fit,minmax(148px,1fr))}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
-  .card .k{font-size:12px;color:var(--muted);margin-bottom:5px}
-  .card .v{font-size:22px;font-weight:650;letter-spacing:.4px}
-  .card .s{font-size:11.5px;color:var(--muted);margin-top:4px}
-  section{background:var(--panel);border:1px solid var(--line);border-radius:12px;
-          padding:15px 17px;margin-top:13px}
-  section > h2{font-size:13.5px;margin:0 0 12px;font-weight:600}
-  section > h2 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:8px}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .grid{display:grid;gap:var(--gap)}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .card .k{font-size:var(--n);color:var(--muted);margin-bottom:4px}
+  .card .v{font-size:var(--num);font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+  .card .s{font-size:var(--n);color:var(--muted);margin-top:4px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+          padding:14px 16px;margin-top:var(--gap)}
+  section > h2{font-size:var(--t);margin:0 0 10px;font-weight:600}
+  section > h2 span{color:var(--muted);font-weight:400;font-size:var(--n);margin-left:8px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
   .two.wide{grid-template-columns:1.35fr 1fr}
   @media(max-width:900px){.two,.two.wide{grid-template-columns:1fr}}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:0 8px 8px 0;
-     border-bottom:1px solid var(--line);white-space:nowrap}
-  td{padding:7px 8px 7px 0;border-bottom:1px solid #1f2632;vertical-align:top}
+  table{width:100%;border-collapse:collapse;font-size:var(--b)}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:var(--n);padding:7px 8px;
+     border-bottom:1px solid var(--line);white-space:nowrap;background:var(--panel2)}
+  td{padding:7px 8px;border-bottom:1px solid var(--row);vertical-align:top}
+  tr:hover td{background:#12161c}
   tr:last-child td{border-bottom:none}
   .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;
+  .tag{display:inline-block;font-size:var(--n);padding:1px 8px;border-radius:999px;
        border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-  .tag.ok{color:var(--ok);border-color:#1e5c47}
-  .tag.bad{color:var(--bad);border-color:#5c2033}
-  .tag.warn{color:var(--warn);border-color:#5a4520}
-  .tag.obs{color:var(--obs);border-color:#43305c}
-  .tag.acc{color:var(--accent);border-color:#31406e}
-  .mem{font-size:13px;line-height:1.6}
-  .mem .meta{font-size:11.5px;color:var(--muted);margin-top:4px}
-  .empty{color:var(--muted);font-size:13px;padding:8px 0}
+  .tag.ok{color:var(--ok);border-color:#238636}
+  .tag.bad{color:var(--bad);border-color:#8b2c26}
+  .tag.warn{color:var(--warn);border-color:#7a5b12}
+  .tag.obs{color:var(--obs);border-color:#6e40c9}
+  .tag.acc{color:var(--accent);border-color:#1f6feb}
+  .mem{font-size:var(--b);line-height:1.6}
+  .mem .meta{font-size:var(--n);color:var(--muted);margin-top:4px}
+  .empty{color:var(--muted);font-size:var(--b);padding:8px 0}
   .bar{height:8px;border-radius:4px;background:var(--panel2);overflow:hidden}
   .bar > i{display:block;height:100%}
-  .err{color:var(--bad);font-size:12px;word-break:break-all}
-  code{background:var(--panel2);padding:1px 5px;border-radius:5px;font-size:12px}
-  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+  .err{color:var(--bad);font-size:var(--n);word-break:break-all}
+  code{background:var(--panel2);padding:1px 6px;border-radius:6px;font-size:var(--n)}
+  .legend{display:flex;gap:14px;font-size:var(--n);color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
   .legend b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .foot{margin-top:22px;font-size:12px;color:var(--muted)}
+  .foot{margin-top:22px;font-size:var(--n);color:var(--muted)}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
-  .chip{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--panel2);
-        border:1px solid var(--line);color:var(--muted);cursor:pointer}
-  .chip.on{background:#243056;border-color:#3a4c86;color:#fff}
-  .score{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .answer{background:#141b2b;border:1px solid #2b3a5c;border-radius:10px;padding:12px 14px;
-          font-size:13.5px;line-height:1.75;white-space:pre-wrap}
-  .split{display:grid;grid-template-columns:300px 1fr;gap:13px}
+  .chip{font-size:var(--n);padding:2px 10px;border-radius:999px;background:var(--panel);
+        border:1px solid var(--line);color:var(--muted);cursor:pointer;min-height:24px;
+        display:inline-flex;align-items:center}
+  .chip:hover{border-color:var(--hover)}
+  .chip.on{background:#233043;border-color:#3d5573;color:#fff}
+  .score{font-size:var(--n);color:var(--muted);font-variant-numeric:tabular-nums}
+  .answer{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+          font-size:var(--b);line-height:1.75;white-space:pre-wrap}
+  .split{display:grid;grid-template-columns:300px 1fr;gap:var(--gap)}
   @media(max-width:900px){.split{grid-template-columns:1fr}}
   .list{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:10px}
-  .list .it{padding:7px 11px;border-bottom:1px solid #1f2632;cursor:pointer;font-size:13px}
+  .list .it{padding:7px 11px;border-bottom:1px solid var(--row);cursor:pointer;font-size:var(--b)}
   .list .it:hover{background:var(--panel2)}
-  .list .it.on{background:#243056}
+  .list .it.on{background:#233043}
   .list .it:last-child{border-bottom:none}
   .list .it .r1{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
   .list .it .r1 span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .list .it .r1 span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
-  iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:12px;background:#fff}
+  iframe{width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);
         border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;
         vertical-align:-1px;margin-right:6px}
   @keyframes sp{to{transform:rotate(360deg)}}
+  /* 外观：自定义背景（多图库；偏好存 dashboard-ui.json，图片存 backgrounds/） */
+  #bgimg,#bgmask{position:fixed;inset:0;z-index:0;pointer-events:none;display:none}
+  #bgimg{inset:-28px;background-size:cover;background-position:center;background-repeat:no-repeat;
+         filter:blur(var(--bgblur,0px))}
+  #bgmask{background:rgba(13,17,23,var(--bgmaskAlpha,0.6))}
+  body.hasbg #bgimg,body.hasbg #bgmask{display:block}
+  body.hasbg .wrap{position:relative;z-index:1}
+  body.hasbg header,body.hasbg .card,body.hasbg section,body.hasbg nav button,
+  body.hasbg .list,body.hasbg .answer{background:rgba(22,27,34,var(--cardA,1))}
+  body.hasbg th{background:rgba(28,33,40,var(--cardA,1))}
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px}
+  .gal .it{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2);cursor:pointer}
+  .gal .it:hover{border-color:var(--hover)}
+  .gal .it.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .gal .thumb{height:76px;background-size:cover;background-position:center;background-color:#0d1117}
+  .gal .nm{font-size:var(--n);color:var(--muted);padding:5px 8px;display:flex;gap:6px;align-items:baseline}
+  .gal .nm b{color:var(--fg);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .gal .del{cursor:pointer;color:var(--bad);padding:0 2px}
+  .gal .del:hover{color:#fff}
+  .drop{margin:10px 0 0;padding:16px;border:1px dashed var(--line);border-radius:9px;text-align:center;
+        color:var(--muted);font-size:var(--n);cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--hover);color:var(--fg);background:var(--panel2)}
+  .posgrid{display:grid;grid-template-columns:repeat(3,44px);gap:6px}
+  .posbtn{min-height:36px;padding:0;font-size:14px;line-height:1}
+  .posbtn.on{border-color:var(--hover);background:var(--panel2);color:var(--fg);
+             box-shadow:inset 0 0 0 1px var(--hover)}
+  input[type=range]{width:100%;max-width:300px;margin:2px 0 0}
+  label{display:block;color:var(--muted);font-size:var(--n);margin-top:10px}
+  label b{color:var(--fg)}
+  /* 小屏：表格变卡片。列名写在 CSS 里，JS 的行渲染零改动 */
+  @media(max-width:560px){
+    table.resp tr.hdr{display:none}
+    table.resp tr{display:block;border:1px solid var(--line);border-radius:9px;margin-bottom:9px;
+                  padding:6px 9px;background:rgba(22,27,34,var(--cardA,1))}
+    table.resp td{display:flex;justify-content:space-between;gap:10px;border:none;padding:4px 0;
+                  text-align:left;white-space:normal}
+    table.resp td::before{content:attr(data-label);color:var(--muted);font-weight:600;flex:0 0 40%}
+    table.resp.c-fix td::before{content:none}
+    table.resp.c-llm  td:nth-child(1)::before{content:"时间"}
+    table.resp.c-llm  td:nth-child(2)::before{content:"阶段"}
+    table.resp.c-llm  td:nth-child(3)::before{content:"模型"}
+    table.resp.c-llm  td:nth-child(4)::before{content:"耗时"}
+    table.resp.c-llm  td:nth-child(5)::before{content:"入/出 tok"}
+    table.resp.c-llm  td:nth-child(6)::before{content:"状态"}
+    table.resp.c-cron td:nth-child(1)::before{content:"任务"}
+    table.resp.c-cron td:nth-child(2)::before{content:"频率"}
+    table.resp.c-cron td:nth-child(3)::before{content:"下次"}
+    table.resp.c-cron td:nth-child(4)::before{content:"状态"}
+    table.resp.c-ops  td:nth-child(1)::before{content:"类型"}
+    table.resp.c-ops  td:nth-child(2)::before{content:"状态"}
+    table.resp.c-ops  td:nth-child(3)::before{content:"创建"}
+    table.resp.c-ops  td:nth-child(4)::before{content:"耗时"}
+    table.resp.c-ops  td:nth-child(5)::before{content:"项"}
+    table.resp.c-ops  td:nth-child(6)::before{content:"操作"}
+  }
+  @media(max-width:480px){
+    .wrap{padding:0 10px 50px}
+    header{margin:0 -10px 12px;padding:10px}
+    button,select,input[type=text],input[type=number],nav button{min-height:44px}
+    .cards{grid-template-columns:repeat(2,minmax(120px,1fr))}
+    .card .v{font-size:22px}
+  }
 </style>
+
 </head>
 <body>
+<div id="bgimg"></div><div id="bgmask"></div>
 <div class="wrap">
   <header>
     <h1>Hindsight 控制面板</h1>
@@ -353,6 +428,8 @@ PAGE = r"""<!DOCTYPE html>
     <button data-tab="graph">实体图谱</button>
     <button data-tab="usage">用量</button>
     <button data-tab="ops">操作诊断</button>
+    <button data-tab="bridge">dsh 桥</button>
+    <button data-tab="appearance">外观</button>
     <button data-tab="config">配置</button>
     <button data-tab="official">官方界面</button>
   </nav>
@@ -484,6 +561,73 @@ PAGE = r"""<!DOCTYPE html>
       </div>
       <div id="opsTable"></div>
     </section>
+  </div>
+
+  <!-- dsh 桥 -->
+  <div class="tab" id="tab-bridge">
+    <div class="grid cards" id="bridgeCards"></div>
+    <section>
+      <h2>共享给 dsh 的事实<span id="bridgeSnapMeta"></span><span id="bridgeWarn" style="color:var(--warn)"></span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button class="primary" id="btnBridgeSync">立即 sync</button>
+        <button id="btnBridgeHarvest">立即 harvest</button>
+        <span id="bridgeHint" style="font-size:11.5px;color:var(--muted)">（本机可点）</span>
+        <span class="legend" style="margin:0">sync＝把记忆渲染成 ~/.dsh/AGENTS.md（dsh 每次会话首请求会读它）· harvest＝把 dsh 的任务结论回收进 Hindsight</span>
+      </div>
+      <div id="bridgeOut" class="empty">点上面的按钮可在本机立刻跑一次（定时任务照旧）。</div>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:12.5px">与上一版快照的差异</summary>
+        <div id="bridgeDiff" style="margin-top:8px;font:11.5px ui-monospace,Menlo,monospace;white-space:pre-wrap;line-height:1.6"></div>
+      </details>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:12.5px">快照开头（dsh 实际读到的前几行）</summary>
+        <div id="bridgeHead" style="margin-top:8px;font:11.5px ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--muted)"></div>
+      </details>
+    </section>
+    <div class="two wide">
+      <section>
+        <h2>最近回收的 dsh 任务<span>来源：Hindsight 的 dsh-task 记忆</span></h2>
+        <div id="bridgeRecent"></div>
+      </section>
+      <section>
+        <h2>定时任务与日志<span id="bridgeState"></span></h2>
+        <div id="bridgeCron"></div>
+        <div id="bridgeLog" style="margin-top:10px;font:11.5px ui-monospace,Menlo,monospace;white-space:pre-wrap;
+             color:var(--muted);max-height:210px;overflow:auto"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 外观 -->
+  <div class="tab" id="tab-appearance">
+    <div class="grid cards" id="appearCards"></div>
+    <section>
+      <h2>背景图库<span id="appearMeta"></span></h2>
+      <div class="gal" id="galWrap"></div>
+      <div class="row" style="margin-top:11px">
+        <input type="file" id="bgFile" accept="image/*" multiple style="display:none">
+        <button class="primary" id="btnBgPick">选图片上传</button>
+        <button id="btnBgOff">清除背景</button>
+        <span class="legend" style="margin:0">点图库里的图即启用；支持 PNG / JPEG / WebP / GIF / AVIF</span>
+      </div>
+      <div id="bgDrop" class="drop">也可以把图片拖到这里（可多张一起拖）</div>
+      <div id="bgOut" class="empty" style="margin-top:8px"></div>
+    </section>
+    <div class="two wide">
+      <section>
+        <h2>显示参数<span>实时预览 · 改动即保存</span></h2>
+        <div id="appearCtl"></div>
+      </section>
+      <section>
+        <h2>说明<span>不碰 Hindsight 自己的配置</span></h2>
+        <div class="legend" style="display:block;line-height:1.95">
+          · 偏好存 <code>~/.hermes/hindsight/dashboard-ui.json</code>，图片存同目录 <code>backgrounds/</code><br>
+          · 卡片会自动变半透明让壁纸透出来，用「卡片不透明」调节<br>
+          · 手机/局域网打开也会生效（壁纸同样过密钥门），但只有本机能改<br>
+          · 删除按钮只删 backgrounds/ 里的那张图，不动别处
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- 配置 -->
@@ -642,7 +786,7 @@ function renderRunState(d){
   const st=d.stats||{}, m=d.metrics||{};
   const mem=firstVal(m['hindsight_process_memory_bytes']), cpu=firstVal(m['hindsight_process_cpu_seconds']);
   const pool=Object.entries(m['hindsight_db_pool_size']||{}).map(([k,v])=>`${k} ${v}`).join(' ');
-  $('#runState').innerHTML = `<table>
+  $('#runState').innerHTML = `<table class="resp c-fix">
     <tr><td>数据库</td><td class="num">${esc((d.health||{}).database||'—')}</td></tr>
     <tr><td>上次合并</td><td class="num">${esc(shortTime(st.last_consolidated_at))}</td></tr>
     <tr><td>待合并 / 合并失败</td><td class="num">${nf(st.pending_consolidation)} / ${nf(st.failed_consolidation)}</td></tr>
@@ -819,7 +963,7 @@ async function loadLLM(){
   llmState.total=d.total||0;
   const items=d.items||[];
   $('#llmTable').innerHTML = items.length ? `<div class="legend">共 ${nf(llmState.total)} 条 · 第 ${Math.floor(llmState.offset/llmState.limit)+1} 页</div>
-    <table><tr><th>时间</th><th>阶段</th><th>模型</th><th class="num">耗时</th><th class="num">入/出 tok</th><th>状态</th></tr>` +
+    <table class="resp c-llm"><tr class="hdr"><th>时间</th><th>阶段</th><th>模型</th><th class="num">耗时</th><th class="num">入/出 tok</th><th>状态</th></tr>` +
     items.map(x=>`<tr><td style="color:#8b97ab;white-space:nowrap">${esc(shortTime(x.started_at))}</td>
       <td>${esc(x.operation||x.scope||'')}</td><td style="color:#8b97ab">${esc(x.model||'')}</td>
       <td class="num">${dur(x.duration_ms)}</td>
@@ -857,7 +1001,7 @@ async function loadOps(){
   opState.total=d.total||0;
   const ops=d.operations||[];
   $('#opsTable').innerHTML = ops.length ? `<div class="legend">共 ${nf(opState.total)} 条 · 第 ${Math.floor(opState.offset/opState.limit)+1} 页</div>
-    <table><tr><th>类型</th><th>状态</th><th>创建</th><th>耗时</th><th class="num">项</th><th></th></tr>` +
+    <table class="resp c-ops"><tr class="hdr"><th>类型</th><th>状态</th><th>创建</th><th>耗时</th><th class="num">项</th><th></th></tr>` +
     ops.map(o=>{
       const cls = o.status==='completed'?'ok':(o.status==='failed'?'bad':'warn');
       const ms = o.created_at&&o.updated_at ? (new Date(o.updated_at)-new Date(o.created_at)) : null;
@@ -884,7 +1028,7 @@ async function loadConfig(){
   const p = d.profile||{}, cfg=d.config||{};
   const banks = (DATA && DATA.banks) || [];      // 修改原因: DATA 为 null 时这里抛异常会让下面三块全部空白
   const me = banks.find(b=>b.bank_id===BANK) || {};
-  $('#cfgProfile').innerHTML = `<table>
+  $('#cfgProfile').innerHTML = `<table class="resp c-fix">
     <tr><td>库名</td><td class="num">${esc(p.name||BANK)}</td></tr>
     <tr><td>mission</td><td class="num">${esc(p.mission||'（未设置）')}</td></tr>
     <tr><td>background</td><td class="num">${esc((p.background||'（未设置）').slice(0,200))}</td></tr>
@@ -899,8 +1043,242 @@ async function loadConfig(){
     : '<div class="empty">没有指令。指令是硬规则，比如「永远引用来源」，在官方界面可以添加。</div>';
   const keys = ['retain_chunk_size','retain_extraction_mode','retain_chunk_batch_size','enable_observations','enable_auto_consolidation',
     'consolidation_max_memories_per_round','consolidation_llm_batch_size','consolidation_llm_parallelism'];
-  $('#cfgRetain').innerHTML = '<table>'+keys.map(k=>`<tr><td><code>${k}</code></td><td class="num">${esc(cfg[k]===null||cfg[k]===undefined?'—':String(cfg[k]))}</td></tr>`).join('')+'</table>';
+  $('#cfgRetain').innerHTML = '<table class="resp c-fix">'+keys.map(k=>`<tr><td><code>${k}</code></td><td class="num">${esc(cfg[k]===null||cfg[k]===undefined?'—':String(cfg[k]))}</td></tr>`).join('')+'</table>';
 }
+/** 外观（自定义背景 · 多图库）
+ *  写法约定：本块**不允许出现反斜杠**。JS 字符串统一用单引号，
+ *  HTML 属性与内联处理器的字符串用 &quot; 实体——这样既不用转义，
+ *  也躲开了「Python 三引号把 ' 吃掉一半」这个坑（踩过一次，整块 JS 报废）。 */
+let APPEAR = null;
+function bgThumb(name, mtime){
+  return '<div class="thumb" style="background-image:url(&quot;/bg/'+encodeURIComponent(name)+'?v='+mtime+'&quot;)"></div>';
+}
+function applyBg(ui){
+  ui = ui || {};
+  const on = !!(ui.enabled && ui.file);
+  document.body.classList.toggle('hasbg', on);
+  const img = document.getElementById('bgimg');
+  if(img){
+    img.style.backgroundImage = on ? ('url("/bg/'+encodeURIComponent(ui.file)+'?v='+Date.now().toString(36)+'")') : 'none';
+    img.style.backgroundSize = ui.fit === 'contain' ? 'contain' : 'cover';
+    img.style.backgroundPosition = ui.pos || 'center center';
+  }
+  const r = document.documentElement.style;
+  r.setProperty('--bgmaskAlpha', (Number(ui.overlay||0)/100).toFixed(2));
+  r.setProperty('--bgblur', Number(ui.blur||0)+'px');
+  r.setProperty('--cardA', (Number(ui.cardA==null?88:ui.cardA)/100).toFixed(2));
+}
+function bgPreview(){
+  const g = function(id){ const el = document.getElementById(id); return el ? Number(el.value) : 0; };
+  const r = document.documentElement.style;
+  r.setProperty('--bgmaskAlpha', (g('bg_ov')/100).toFixed(2));
+  r.setProperty('--bgblur', g('bg_bl')+'px');
+  r.setProperty('--cardA', (g('bg_ca')/100).toFixed(2));
+  const pairs = [['bg_ov_v','bg_ov'],['bg_bl_v','bg_bl'],['bg_ca_v','bg_ca']];
+  pairs.forEach(function(pair){
+    const el = document.getElementById(pair[0]); if(el) el.textContent = nf(g(pair[1]));
+  });
+}
+async function bgSave(patch, msg){
+  const r = await jpost('/api/ui?'+B(), patch);
+  if(!r || r._error || r.ok === false){
+    $('#bgOut').innerHTML = '<div class="err">保存失败：'+esc((r&&(r.error||r._error))||'未知')+'</div>';
+    return null;
+  }
+  await loadAppearance();
+  if(msg) $('#bgOut').innerHTML = '<div style="color:var(--ok)">'+esc(msg)+'</div>';
+  return r;
+}
+async function loadAppearance(){
+  const d = await jget('/api/ui?'+B());
+  if(d._error){ $('#appearCards').innerHTML = '<div class="err">外观读取失败：'+esc(d._error)+'</div>'; return; }
+  APPEAR = d;
+  const ui = (d.ui||{}).background||{}, imgs = d.images||[];
+  applyBg(ui);
+  const active = ui.file || '';
+  $('#appearMeta').textContent = '　'+(d.dir||'')+' · '+nf(imgs.length)+' 张';
+  $('#appearCards').innerHTML = [
+    bCard('当前背景', active || (ui.enabled ? '未选图' : '已关闭'), active ? '已启用' : '点图库里的图启用'),
+    bCard('图库张数', nf(imgs.length), '单张上限 '+nf(Math.round((d.max_bytes||0)/1048576))+' MB'),
+    bCard('遮罩 / 模糊', nf(ui.overlay)+'% / '+nf(ui.blur)+'px', '遮罩越厚文字越清楚'),
+    bCard('卡片不透明', nf(ui.cardA)+'%', '越低越透出壁纸')
+  ].join('');
+  $('#galWrap').innerHTML = imgs.length ? imgs.map(function(it){
+    return '<div class="it '+(it.name===active?'on':'')+'" data-pick="'+esc(it.name)+'" title="点击启用">'
+      + bgThumb(it.name, it.mtime)
+      + '<div class="nm"><b>'+esc(it.name)+'</b><span>'+nf(Math.round(it.bytes/1024))+'KB</span>'
+      + '<span class="del" data-del="'+esc(it.name)+'" title="删除这张">✕</span></div></div>';
+  }).join('') : '<div class="empty">还没有背景图：把图片拖到下面的框，或点「选图片上传」。</div>';
+  const pos = ui.pos || 'center center';
+  /* 位置按钮的标签是「top left」这种顺序，后端存的是 CSS 习惯的「left top」——
+     比对时把两段排序后再比，否则高亮永远落在中心那个按钮上 */
+  const samePos = function(a, b){
+    const k = function(s){ return String(s||'').split(' ').sort().join(' '); };
+    return k(a) === k(b);
+  };
+  const lo = (d.card_a_range||[55,100])[0];
+  const POS = ['top left','top center','top right','center left','center center','center right','bottom left','bottom center','bottom right'];
+  const ARROW = ['↖','↑','↗','←','●','→','↙','↓','↘'];
+  $('#appearCtl').innerHTML =
+      '<label>遮罩深度 <b id="bg_ov_v">'+nf(ui.overlay)+'</b>%（越厚文字越清楚）</label>'
+    + '<input type="range" id="bg_ov" min="0" max="100" value="'+ui.overlay+'" oninput="bgPreview()" onchange="bgSave({overlay:Number(this.value)},&quot;遮罩已保存&quot;)">'
+    + '<label>模糊 <b id="bg_bl_v">'+nf(ui.blur)+'</b>px</label>'
+    + '<input type="range" id="bg_bl" min="0" max="40" value="'+ui.blur+'" oninput="bgPreview()" onchange="bgSave({blur:Number(this.value)},&quot;模糊已保存&quot;)">'
+    + '<label>卡片不透明 <b id="bg_ca_v">'+nf(ui.cardA)+'</b>%（调低让壁纸透出来）</label>'
+    + '<input type="range" id="bg_ca" min="'+lo+'" max="100" value="'+ui.cardA+'" oninput="bgPreview()" onchange="bgSave({cardA:Number(this.value)},&quot;卡片不透明度已保存&quot;)">'
+    + '<div class="row" style="margin-top:14px;align-items:flex-start"><span class="legend" style="margin:0">位置</span><div class="posgrid">'
+    + POS.map(function(v,k){ return '<button class="posbtn '+(samePos(v,pos)?'on':'')+'" data-pos="'+v+'" title="'+v+'">'+ARROW[k]+'</button>'; }).join('')
+    + '</div></div>'
+    + '<div class="row" style="margin-top:12px"><span class="legend" style="margin:0">缩放</span>'
+    + '<button class="'+(ui.fit!=='contain'?'primary':'')+'" data-fit="cover">cover 铺满</button>'
+    + '<button class="'+(ui.fit==='contain'?'primary':'')+'" data-fit="contain">contain 完整</button>'
+    + '<button data-enable="'+(ui.enabled?'0':'1')+'">'+(ui.enabled?'关闭背景':'启用背景')+'</button></div>';
+  document.querySelectorAll('#appearCtl [data-pos]').forEach(function(b){
+    b.onclick = function(){ bgSave({pos: b.dataset.pos}, '位置：'+b.dataset.pos); };
+  });
+  document.querySelectorAll('#appearCtl [data-fit]').forEach(function(b){
+    b.onclick = function(){ bgSave({fit: b.dataset.fit}, '缩放：'+b.dataset.fit); };
+  });
+  const eb = document.querySelector('#appearCtl [data-enable]');
+  if(eb) eb.onclick = function(){ bgSave({enabled: eb.dataset.enable === '1'}, eb.dataset.enable === '1' ? '背景已启用' : '背景已关闭'); };
+  document.querySelectorAll('#galWrap [data-pick]').forEach(function(el){
+    el.onclick = function(e){
+      if(e.target && e.target.dataset && e.target.dataset.del) return;
+      bgSave({file: el.dataset.pick, enabled: true}, '已切换到 '+el.dataset.pick);
+    };
+  });
+  document.querySelectorAll('#galWrap [data-del]').forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      const n = el.dataset.del;
+      if(!confirm('删除背景图 '+n+'？文件会从 backgrounds/ 里移除。')) return;
+      jpost('/api/ui/image/delete?'+B(), {name:n}).then(function(r){
+        $('#bgOut').innerHTML = (r && r.ok) ? '<div style="color:var(--ok)">已删除 '+esc(n)+'</div>'
+          : '<div class="err">删除失败：'+esc((r&&(r.error||r._error))||'未知')+'</div>';
+        loadAppearance();
+      });
+    };
+  });
+}
+async function bgUpload(files){
+  const list = Array.prototype.slice.call(files || []);
+  if(!list.length) return;
+  let done = 0;
+  const failed = [];
+  for(let i=0;i<list.length;i++){
+    const f = list[i];
+    $('#bgOut').innerHTML = '<span class="spin"></span>上传 '+esc(f.name)+'（'+(i+1)+'/'+list.length+'）…';
+    try{
+      const res = await fetch('/api/ui/image?'+B()+'&name='+encodeURIComponent(f.name),
+        {method:'POST', headers:{'Content-Type': f.type || 'application/octet-stream'}, body: f});
+      const j = await res.json().catch(function(){ return {}; });
+      if(res.ok && j.ok){
+        done++;
+        const cur = ((APPEAR||{}).ui||{}).background||{};
+        if(!cur.file) await bgSave({file: j.name, enabled: true});
+      } else { failed.push(f.name+'：'+(j.error||('HTTP '+res.status))); }
+    }catch(err){ failed.push(f.name+'：'+err.message); }
+  }
+  $('#bgOut').innerHTML = failed.length ? '<div class="err">'+esc(failed.join('；'))+'</div>'
+    : '<div style="color:var(--ok)">已上传 '+nf(done)+' 张，点图库里的图即可切换</div>';
+  await loadAppearance();
+}
+(function initAppearance(){
+  const pick = $('#btnBgPick'), inp = $('#bgFile'), drop = $('#bgDrop'), off = $('#btnBgOff');
+  if(pick && inp){ pick.onclick = function(){ inp.click(); }; inp.onchange = function(){ bgUpload(inp.files); inp.value=''; }; }
+  if(drop){
+    ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+    ['dragleave','drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+    drop.addEventListener('drop', function(e){ const f = e.dataTransfer && e.dataTransfer.files; if(f && f.length) bgUpload(f); });
+    drop.addEventListener('click', function(){ if(inp) inp.click(); });
+  }
+  if(off) off.onclick = function(){ bgSave({file:'', enabled:false}, '背景已清除'); };
+})();
+/* ---------------- dsh 桥 ---------------- */
+function bTs(v){
+  if(v===null||v===undefined||v==='') return '—';
+  if(typeof v==='number') return new Date(v*1000).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return shortTime(v);
+}
+/* 快照膨胀阈值：超过就变黄提醒——它会进入每个 dsh 会话的首请求，越大越拖累。
+   调试用：访问 ?bridge_warn=1#bridge 把阈值压到 1 字符，可验证告警样式。 */
+const BRIDGE_WARN_CHARS = Number((new URLSearchParams(location.search)).get('bridge_warn') || 8000);
+function bCard(k,v,s,warn){
+  const col = warn ? ' style="color:var(--warn)"' : '';
+  return `<div class="card"><div class="k">${esc(k)}</div><div class="v"${col}>${esc(v)}</div>`
+       + `<div class="s"${col}>${esc(s||'')}</div></div>`;
+}
+async function loadBridge(){
+  const d = await jget('/api/bridge?'+B());
+  if(d._error){ $('#bridgeCards').innerHTML = `<div class="err">桥状态读取失败：${esc(d._error)}</div>`; return; }
+  const s = d.snapshot||{}, cron = d.cron||[];
+  /* 卡片行：只放四个最该一眼看到的数 */
+  const hJob = cron.find(x=>String(x.name||'').includes('harvest'))||{};
+  const fat = Number(s.chars||0) > BRIDGE_WARN_CHARS;
+  $('#bridgeCards').innerHTML = [
+    bCard('快照大小', nf(s.chars), s.missing ? '文件不存在'
+      : fat ? `${nf(s.bytes)} 字节 · ${nf(s.facts)} 条事实 · 已超 ${nf(BRIDGE_WARN_CHARS)}，建议精简`
+            : `${nf(s.bytes)} 字节 · ${nf(s.facts)} 条事实（限 ${nf(BRIDGE_WARN_CHARS)}）`, fat),
+    bCard('快照更新', bTs(s.updated), s.marker ? '已带自动生成标记' : '缺自动生成标记！'),
+    bCard('已回收任务', nf((d.recent||[]).length), (d.state||{}).processed ? `会话游标 ${nf(d.state.processed)} 个` : ''),
+    bCard('harvest 下次', bTs(hJob.next), hJob.status ? ('上次：'+hJob.status) : '（还没跑过）'),
+  ].join('');
+  $('#bridgeHint').textContent = d.remote_bridge ? '（本机与手机都能点）' : '（目前仅本机可点）';
+  const w = $('#bridgeWarn'); if(w) w.textContent = fat ? '　快照已超阈值：会拖累每个 dsh 会话的首请求' : '';
+  $('#bridgeSnapMeta').textContent = s.path ? `　${s.path}` : '';
+  $('#bridgeHead').textContent = s.head || '（读不到快照）';
+  /* 差异：忽略时间戳行后逐行比对，新增绿 / 移除红 */
+  const df = d.diff||{};
+  $('#bridgeDiff').innerHTML = !df.available
+    ? `<span style="color:var(--muted)">${esc(df.reason||'暂无可比对的备份')}</span>`
+    : (!df.added_total && !df.removed_total)
+      ? '<span style="color:var(--muted)">与上一版完全一致</span>'
+      : `<div style="color:var(--muted);margin-bottom:6px">对比 ${esc(df.from)}（${esc(bTs(df.from_mtime))}）· 新增 ${nf(df.added_total)} 行 / 移除 ${nf(df.removed_total)} 行</div>`
+        + (df.removed||[]).map(l=>`<div style="color:#ffb3ad">- ${esc(String(l).slice(0,200))}</div>`).join('')
+        + (df.added||[]).map(l=>`<div style="color:var(--ok)">+ ${esc(String(l).slice(0,200))}</div>`).join('');
+  /* 回收记录：直接来自 Hindsight 的 dsh-task 记忆 */
+  const rec = d.recent||[];
+  $('#bridgeRecent').innerHTML = d._recent_error
+    ? `<div class="err">Hindsight 查询失败：${esc(d._recent_error)}</div>`
+    : rec.length
+      ? rec.map(r=>`<div style="padding:6px 0;border-bottom:1px solid var(--row)">
+          <div>${esc(r.text||'（空）')}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:3px">${esc(bTs(r.when))}
+            ${(r.tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join(' ')}</div></div>`).join('')
+      : '<div class="empty">还没有回收记录：带 [hermes] 标记的 dsh 会话被 harvest 回收后会出现在这里。</div>';
+  /* 定时任务 + 日志 */
+  $('#bridgeCron').innerHTML = cron.length
+    ? '<table class="resp c-cron">'+cron.map(j=>`<tr><td>${esc(j.name||'')}${j.enabled===false?' <span style="color:#ffb3ad">已停用</span>':''}</td>
+        <td class="num">${esc(j.schedule||'')}</td><td class="num">下次 ${esc(bTs(j.next))}</td>
+        <td class="num">${esc(j.status||'未跑过')}</td></tr>`).join('')+'</table>'
+    : '<div class="empty">没读到 cron 任务（~/.hermes/cron/jobs.json）</div>';
+  $('#bridgeState').textContent = d.candidates ? `　${d.candidates}` : '';
+  $('#bridgeLog').textContent = (d.log||[]).join('\n') || '（日志为空）';
+}
+async function bridgeRun(which, btn){
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '运行中…';
+  $('#bridgeOut').className = '';
+  $('#bridgeOut').innerHTML = `<span style="color:var(--muted)">正在跑 ${esc(which)}…（harvest 约 1 秒，sync 约 15 秒）</span>`;
+  const r = await jpost('/api/bridge-action?'+B(), {action: which});
+  btn.disabled = false; btn.textContent = label;
+  $('#bridgeOut').innerHTML = (r && r.ok)
+    ? `<div style="color:var(--ok)">${esc(which)} 成功</div>
+       <div style="font:11.5px ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--muted);margin-top:5px">${esc(((r.output)||'').slice(0,900))}</div>`
+    : `<div class="err">${esc(which)} 失败：${esc((r && (r.error||r.output)) || '未知错误')}</div>`;
+  await loadBridge();
+}
+$('#btnBridgeSync').onclick = e=>bridgeRun('sync', e.currentTarget);
+$('#btnBridgeHarvest').onclick = e=>bridgeRun('harvest', e.currentTarget);
+
+/* 桥没装（公开版默认如此）就自动把标签藏掉，不留一个点开是空的页面 */
+(async function probeBridge(){
+  try{
+    const d = await jget('/api/bridge?'+B());
+    const btn = document.querySelector('#nav button[data-tab=\"bridge\"]');
+    if(btn && d && d.configured === false) btn.style.display = 'none';
+  }catch(e){}
+})();
 /* ---------------- 主流程 ---------------- */
 async function loadSummary(){
   $('#btnRefresh').disabled = true;
@@ -917,6 +1295,8 @@ async function loadTab(name){
   if(name==='graph'){ await loadEntities(); await loadGraph(); }
   if(name==='usage') await loadLLM();
   if(name==='ops') await loadOps();
+  if(name==='bridge') await loadBridge();
+  if(name==='appearance') await loadAppearance();
   if(name==='config') await loadConfig();
   if(name==='official'){ const f=$('#cpFrame'); if(!f.src || f.src==='about:blank') f.src = CP_URL+'/dashboard'; }
 }
@@ -973,6 +1353,7 @@ if(_qs.get('q')){
   if(_qs.get('budget')) $('#selBudget').value = _qs.get('budget');
   runQuery();
 }
+loadAppearance();
 setInterval(loadSummary, 60000);
 </script>
 </body>
@@ -1018,12 +1399,367 @@ if(location.search.indexOf('bad=1')>-1) document.getElementById('e').textContent
 # ---------------------------------------------------------------------------
 # HTTP 服务
 # ---------------------------------------------------------------------------
+# ---------------- 外观（自定义背景 · 多图库）----------------
+# 偏好独立存 dashboard-ui.json，图片放 backgrounds/，都不碰 Hindsight 自己的配置。
+import tempfile  # noqa: E402
+
+UI_DIR = os.path.expanduser(os.getenv("HS_DASH_UI_DIR", "~/.hermes/hindsight"))
+UI_JSON = os.path.join(UI_DIR, "dashboard-ui.json")
+BG_DIR = os.path.join(UI_DIR, "backgrounds")
+BG_MAX_BYTES = 12 * 1024 * 1024
+BG_TYPES = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp",
+            "image/gif": ".gif", "image/avif": ".avif"}
+SAFE_BG_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+BG_POS = re.compile(r"^(left|center|right|\d{1,3}%)\s+(top|center|bottom|\d{1,3}%)$")
+DEFAULT_UI = {"enabled": True, "file": "", "overlay": 60, "blur": 0,
+              "pos": "center center", "fit": "cover", "cardA": 88}
+CARD_A_MIN, CARD_A_MAX = 55, 100
+
+
+def _clamp_int(v, lo, hi, dflt):
+    try:
+        return max(lo, min(hi, int(round(float(v)))))
+    except (TypeError, ValueError):
+        return dflt
+
+
+def norm_pos(v):
+    """位置：接受 "top left"（九宫格标签）与 "left top"（CSS 习惯）两种写法，数字夹到 0-100，
+    无法识别的值退回 center center。
+
+    教训：原实现只看「第一段必须是 left/center/right」，于是 "top left" 被判非法、
+    静默退回 center center —— 九个位置按钮表面能用、实际不生效。校验必须按关键字归轴，
+    不能按位置；而 center 是歧义的，要先认掉 left/right/top/bottom，再填空槽。
+    """
+    parts = " ".join(str(v or "").split()).split()
+    if len(parts) != 2:
+        return str(DEFAULT_UI["pos"])
+    x = y = None
+    rest = []
+    for tok in parts:
+        if tok in ("left", "right") and x is None:
+            x = tok
+        elif tok in ("top", "bottom") and y is None:
+            y = tok
+        else:
+            rest.append(tok)
+    for tok in rest:
+        if tok == "center":
+            val = "center"
+        else:
+            m = re.fullmatch(r"(\d{1,3})%", tok)
+            if not m:
+                return str(DEFAULT_UI["pos"])
+            val = f"{_clamp_int(m.group(1), 0, 100, 50)}%"
+        if x is None:
+            x = val
+        elif y is None:
+            y = val
+        else:
+            return str(DEFAULT_UI["pos"])
+    if x is None or y is None:
+        return str(DEFAULT_UI["pos"])
+    return f"{x} {y}"
+
+
+def safe_bg_name(name):
+    """只允许 basename + 白名单字符：挡住 ../ 之类的路径穿越。"""
+    n = os.path.basename(str(name or ""))
+    return n if SAFE_BG_NAME.match(n) else ""
+
+
+def bg_path(name):
+    n = safe_bg_name(name)
+    return os.path.join(BG_DIR, n) if n else ""
+
+
+def sniff_image(raw):
+    """按魔数判类型：不看客户端声明的 Content-Type。"""
+    if raw[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if raw[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if raw[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+        return "image/webp"
+    if raw[4:12] in (b"ftypavif", b"ftypavis"):
+        return "image/avif"
+    return ""
+
+
+def load_ui():
+    got = _read_json_file(UI_JSON, {})
+    if not isinstance(got, dict):
+        got = {}
+    ui = dict(DEFAULT_UI)
+    ui["enabled"] = bool(got.get("enabled", True))
+    f = safe_bg_name(got.get("file"))
+    ui["file"] = f if (f and os.path.isfile(bg_path(f))) else ""
+    ui["overlay"] = _clamp_int(got.get("overlay", 60), 0, 100, 60)
+    ui["blur"] = _clamp_int(got.get("blur", 0), 0, 40, 0)
+    ui["cardA"] = _clamp_int(got.get("cardA", 88), CARD_A_MIN, CARD_A_MAX, 88)
+    ui["pos"] = norm_pos(got.get("pos", DEFAULT_UI["pos"]))
+    ui["fit"] = "contain" if str(got.get("fit", "")).lower() == "contain" else "cover"
+    return ui
+
+
+def save_ui(patch):
+    cur = load_ui()
+    if isinstance(patch, dict):
+        if "enabled" in patch:
+            cur["enabled"] = bool(patch.get("enabled"))
+        if "file" in patch:
+            cur["file"] = safe_bg_name(patch.get("file"))
+        for k, lo, hi in (("overlay", 0, 100), ("blur", 0, 40), ("cardA", CARD_A_MIN, CARD_A_MAX)):
+            if k in patch:
+                cur[k] = _clamp_int(patch.get(k), lo, hi, cur[k])
+        if "pos" in patch:
+            cur["pos"] = norm_pos(patch.get("pos"))
+        if "fit" in patch:
+            cur["fit"] = "contain" if str(patch.get("fit", "")).lower() == "contain" else "cover"
+    os.makedirs(UI_DIR, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=UI_DIR, suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump(cur, fh, ensure_ascii=False, indent=2)
+    os.replace(tmp, UI_JSON)
+    return cur
+
+
+def list_backgrounds():
+    out = []
+    try:
+        names = os.listdir(BG_DIR)
+    except OSError:
+        return out
+    for n in sorted(names):
+        f = bg_path(n)
+        if not f or not os.path.isfile(f):
+            continue
+        try:
+            st = os.stat(f)
+        except OSError:
+            continue
+        out.append({"name": n, "bytes": st.st_size, "mtime": int(st.st_mtime)})
+    return out
+
+
+def bg_cache_token(name):
+    """按 mtime+size 做缓存令牌：换了图浏览器一定重新拉。"""
+    try:
+        st = os.stat(bg_path(name))
+    except OSError:
+        return "0"
+    return f"{int(st.st_mtime)}{st.st_size % 100000}"
+
+
+def build_appearance():
+    return {"ui": {"background": load_ui()}, "images": list_backgrounds(),
+            "url_prefix": "/bg/", "max_bytes": BG_MAX_BYTES, "types": sorted(BG_TYPES),
+            "card_a_range": [CARD_A_MIN, CARD_A_MAX], "dir": BG_DIR}
+
+
+def save_background_upload(raw, name_hint=""):
+    """存一张壁纸。类型按魔数判定，文件名清洗后加序号防撞。"""
+    if not raw:
+        return {"ok": False, "error": "空文件"}
+    if len(raw) > BG_MAX_BYTES:
+        return {"ok": False, "error": f"超过上限 {BG_MAX_BYTES // 1048576} MB"}
+    ctype = sniff_image(raw)
+    if ctype not in BG_TYPES:
+        return {"ok": False, "error": "只支持 PNG / JPEG / WebP / GIF / AVIF"}
+    os.makedirs(BG_DIR, exist_ok=True)
+    base = os.path.splitext(safe_bg_name(name_hint) or "wallpaper")[0] or "wallpaper"
+    base = re.sub(r"[^A-Za-z0-9._-]", "-", base)[:40] or "wallpaper"
+    ext = BG_TYPES[ctype]
+    name, i = base + ext, 1
+    while os.path.exists(bg_path(name)):
+        i += 1
+        name = f"{base}-{i}{ext}"
+    dst = bg_path(name)
+    fd, tmp = tempfile.mkstemp(dir=BG_DIR, suffix=".part")
+    with os.fdopen(fd, "wb") as fh:
+        fh.write(raw)
+    os.replace(tmp, dst)
+    return {"ok": True, "name": name, "bytes": len(raw), "type": ctype}
+
+
+def delete_background(name):
+    f = bg_path(name)
+    if not f or not os.path.isfile(f):
+        return {"ok": False, "error": "没有这张图"}
+    try:
+        os.remove(f)
+    except OSError as e:  # noqa: BLE001
+        return {"ok": False, "error": f"删除失败：{type(e).__name__}"}
+    ui = load_ui()
+    if ui.get("file") == os.path.basename(f):
+        save_ui({"file": ""})          # 删的是当前在用的那张 → 顺手清空引用
+    return {"ok": True, "deleted": os.path.basename(f), "images": list_backgrounds()}
+
+
+# ---------------- dsh 记忆桥（agent_bridge.py）----------------
+# 桥是独立程序（Hindsight 为唯一事实源）；面板只做三件事：
+#   只读展示桥的状态 · 看「共享给 dsh 的快照」与它的 diff · 本机触发 sync/harvest
+BRIDGE_PY = os.path.expanduser(os.getenv("HS_DASH_BRIDGE_PY", "~/agent-bridge/agent_bridge.py"))
+BRIDGE_STATE = os.path.expanduser(os.getenv("HS_DASH_BRIDGE_STATE", "~/.agent-bridge/state.json"))
+BRIDGE_LOG = os.path.expanduser(os.getenv("HS_DASH_BRIDGE_LOG", "~/.agent-bridge/bridge.log"))
+BRIDGE_SNAPSHOT = os.path.expanduser(os.getenv("HS_DASH_BRIDGE_SNAPSHOT", "~/.dsh/AGENTS.md"))
+BRIDGE_MARKER = "dsh-bridge:auto-generated"
+BRIDGE_TAG = "dsh-task"
+BRIDGE_ACTIONS = {
+    "sync": os.path.expanduser(os.getenv("HS_DASH_BRIDGE_SYNC_SH", "~/.hermes/scripts/agent_bridge_sync.sh")),
+    "harvest": os.path.expanduser(os.getenv("HS_DASH_BRIDGE_HARVEST_SH", "~/.hermes/scripts/agent_bridge_harvest.sh")),
+}
+CRON_STORE = os.path.expanduser(os.getenv("HS_DASH_CRON_STORE", "~/.hermes/cron/jobs.json"))
+
+
+def _tail_lines(path, n=8):
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            return [line.rstrip("\n") for line in f.readlines()[-n:]]
+    except OSError:
+        return []
+
+
+def _read_json_file(path, default=None):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default if default is not None else {}
+
+
+def _bridge_snapshot():
+    path = BRIDGE_SNAPSHOT
+    if not os.path.exists(path):
+        return {"path": path, "missing": True}
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            raw = f.read()
+        st = os.stat(path)
+    except OSError as e:  # noqa: BLE001
+        return {"path": path, "_error": str(e)}
+    return {"path": path, "chars": len(raw), "bytes": st.st_size, "updated": int(st.st_mtime),
+            "marker": BRIDGE_MARKER in raw,
+            "facts": sum(1 for line in raw.splitlines() if line.startswith("- ")),
+            "head": raw[:600]}
+
+
+def _bridge_diff(limit=40):
+    """最新备份 vs 当前快照。忽略自动生成的时间戳行，否则每次 sync 都算「有差异」。"""
+    import glob
+    baks = sorted(glob.glob(BRIDGE_SNAPSHOT + ".bak.*"), key=os.path.getmtime, reverse=True)
+    if not baks or not os.path.exists(BRIDGE_SNAPSHOT):
+        return {"available": False, "reason": "还没有备份（等第二次 sync 之后就能对比）"}
+
+    def lines(p):
+        try:
+            with open(p, "r", encoding="utf-8", errors="replace") as f:
+                return [line.rstrip() for line in f]
+        except OSError:
+            return []
+
+    skip = ("生成时间：", BRIDGE_MARKER)
+    old_body = [l for l in lines(baks[0]) if l.strip() and not l.startswith(skip)]
+    new_body = [l for l in lines(BRIDGE_SNAPSHOT) if l.strip() and not l.startswith(skip)]
+    old_set, new_set = set(old_body), set(new_body)
+    added = [l for l in new_body if l not in old_set]
+    removed = [l for l in old_body if l not in new_set]
+    return {"available": True, "from": os.path.basename(baks[0]),
+            "from_mtime": int(os.path.getmtime(baks[0])),
+            "added": added[:limit], "removed": removed[:limit],
+            "added_total": len(added), "removed_total": len(removed)}
+
+
+def _bridge_cron():
+    """只挑桥相关的 cron；一个都没匹配上就把全部列出来，方便发现「任务被删了」。"""
+    data = _read_json_file(CRON_STORE, {})
+    jobs = data.get("jobs") if isinstance(data, dict) else data
+    if isinstance(jobs, dict):
+        jobs = list(jobs.values())
+    if not isinstance(jobs, list):
+        return []
+    picked = [j for j in jobs if isinstance(j, dict) and "agent-bridge" in str(j.get("name", ""))]
+    if not picked:
+        picked = [j for j in jobs if isinstance(j, dict)]
+    return [{"name": j.get("name"), "schedule": j.get("schedule_display") or j.get("schedule"),
+             "next": j.get("next_run_at"), "last": j.get("last_run_at"),
+             "status": j.get("last_status"), "error": j.get("last_error"),
+             "enabled": j.get("enabled", True), "script": j.get("script")} for j in picked]
+
+
+def build_bridge(api, bank, recent=8):
+    import glob
+    state = _read_json_file(BRIDGE_STATE, {})
+    processed = state.get("processed") or {}
+    result = {
+        "snapshot": _bridge_snapshot(),
+        "backups": [],
+        "diff": _bridge_diff(),
+        "recent": [],
+        "cron": _bridge_cron(),
+        "state": {"processed": len(processed) if isinstance(processed, dict) else 0,
+                  "last_run": state.get("last_run"), "file": BRIDGE_STATE},
+        "log": _tail_lines(BRIDGE_LOG, 10),
+        "candidates": "",
+        "py": BRIDGE_PY,
+        "remote_bridge": bool(Handler.allow_remote_bridge),  # 手机/局域网能不能点那两个按钮
+        "configured": os.path.exists(BRIDGE_PY),             # 没装桥就自动隐藏这个标签
+    }
+    for b in sorted(glob.glob(BRIDGE_SNAPSHOT + ".bak.*"), key=os.path.getmtime, reverse=True)[:3]:
+        try:
+            result["backups"].append({"name": os.path.basename(b), "bytes": os.path.getsize(b),
+                                      "mtime": int(os.path.getmtime(b))})
+        except OSError:
+            pass
+    for line in reversed(result["log"]):
+        m = re.search(r"harvest: 候选会话 (\d+) 个（已处理 (\d+) 个）", line)
+        if m:
+            result["candidates"] = f"上次 harvest：候选 {m.group(1)} 个 · 累计已处理 {m.group(2)} 个"
+            break
+    # 回收记录直接问 Hindsight（唯一事实源），不读桥自己的中间文件
+    try:
+        items = api_get(api, f"/v1/default/banks/{urllib.parse.quote(bank)}/memories/list",
+                        {"tags": BRIDGE_TAG, "tags_match": "all_strict", "limit": str(recent)})
+        if isinstance(items, list):
+            items = {"items": items}
+        for it in (items.get("items") or [])[:recent]:
+            text = re.sub(r"\s*\|\s*(When|Where|Involving|Why)\s*:.*$", "", str(it.get("text") or ""))
+            result["recent"].append({
+                "id": it.get("id"), "text": re.sub(r"\s+", " ", text).strip()[:220],
+                "when": it.get("created_at") or it.get("date") or it.get("timestamp"),
+                "tags": [t for t in (it.get("tags") or []) if isinstance(t, str)][:6],
+            })
+    except Exception as e:  # noqa: BLE001
+        result["_recent_error"] = str(e)
+    return result
+
+
+def run_bridge_action(name):
+    """本机触发 sync/harvest。白名单防任意命令；do_POST 侧已限制只有本机能写。"""
+    import subprocess
+    script = BRIDGE_ACTIONS.get((name or "").strip().lower())
+    if not script:
+        return {"ok": False, "error": f"不认识的 action：{name!r}（只允许 sync / harvest）"}
+    if not os.path.exists(script):
+        return {"ok": False, "error": f"脚本不存在：{script}"}
+    try:
+        p = subprocess.run(["/bin/bash", script], capture_output=True, text=True, timeout=180)
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "超时（>180 秒）"}
+    out = ((p.stdout or "") + (p.stderr or "")).strip()
+    return {"ok": p.returncode == 0, "code": p.returncode, "action": name,
+            "output": out[-1500:] or "（无输出＝成功且无新增）"}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "HindsightDashboard/2.0"
     api_base = DEFAULT_API
     cp_url = DEFAULT_CP
     default_bank = DEFAULT_BANK
-    allow_remote_write = False   # 局域网只读；True 时允许远程触发重试/反思（会花 token）
+    allow_remote_write = False
+    allow_remote_bridge = False  # 桥的 sync/harvest 可单独放开（便宜）   # 局域网只读；True 时允许远程触发重试/反思（会花 token）
     access_key = ""              # 非空时，非本机访问必须携带密钥（?k= 或 cookie）
 
     def log_message(self, fmt, *args):
@@ -1091,6 +1827,31 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header(h, v)
             self.end_headers()
             return
+        if path == "/api/ui":
+            return self._send(200, json.dumps(build_appearance(), ensure_ascii=False))
+        if path.startswith("/bg/"):
+            # 壁纸：远程也要能加载（已在上面过密钥门），单独一条分支
+            name = urllib.parse.unquote(os.path.basename(path[len("/bg/"):]))
+            f = bg_path(name)
+            if not f or not os.path.isfile(f):
+                return self._send(404, json.dumps({"detail": "没有这张图"}, ensure_ascii=False))
+            try:
+                with open(f, "rb") as fh:
+                    raw = fh.read(BG_MAX_BYTES + 1)
+            except OSError as e:  # noqa: BLE001
+                return self._send(500, json.dumps({"detail": f"读图失败：{type(e).__name__}"}, ensure_ascii=False))
+            ctype = sniff_image(raw) or "application/octet-stream"
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "private, max-age=60")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            try:
+                self.wfile.write(raw)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            return
         if path in ("/", "/index.html"):
             return self._send(200, PAGE, "text/html; charset=utf-8", extra_headers=extra)
         if path == "/docs":
@@ -1155,6 +1916,8 @@ class Handler(BaseHTTPRequestHandler):
             }, ensure_ascii=False))
         if path == "/api/reflect":
             pass  # POST only
+        if path == "/api/bridge":
+            return self._send(200, json.dumps(build_bridge(api, self._bank(q)), ensure_ascii=False))
         if path == "/api/cancel":
             op = q.get("op", [""])[0]
             return self._send(200, json.dumps(api_delete(api, f"/v1/default/banks/{self._qb(q)}/operations/{urllib.parse.quote(op)}"), ensure_ascii=False))
@@ -1165,12 +1928,25 @@ class Handler(BaseHTTPRequestHandler):
         ok, _ = self._check_key(q)
         if not ok:
             return self._send(401, json.dumps({"detail": "需要访问密钥：请在网址后加 ?k=密钥"}, ensure_ascii=False))
-        # 写操作（重试/反思）会消耗 LLM token。默认只允许本机触发，
-        # 局域网/手机来访一律拒绝，防止同网段设备误点烧钱。
-        if not self.allow_remote_write and not self._is_local():
+        # 写操作分两档放行：桥的 sync/harvest 便宜（脚本内不调 LLM），可单独放开；
+        # 重试/反思/取消会花 token 或改记忆，必须 --allow-remote-write。
+        is_local = self._is_local()
+        if not is_local and not self.allow_remote_write:
+            if path == "/api/bridge-action" and self.allow_remote_bridge:
+                pass
+            elif path == "/api/bridge-action":
+                return self._send(403, json.dumps({
+                    "detail": "桥按钮目前仅限本机；想让手机也能点，给服务加 --allow-remote-bridge",
+                }, ensure_ascii=False))
             return self._send(403, json.dumps({
                 "detail": "写操作仅限本机：本面板对局域网开放只读访问。需从手机触发重试/反思，请给服务加 --allow-remote-write",
             }, ensure_ascii=False))
+        if path == "/api/ui/image":
+            # 壁纸上传：raw 二进制 body（不当 JSON 解析），类型按魔数判定
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length) if length else b""
+            return self._send(200, json.dumps(save_background_upload(raw, q.get("name", [""])[0]),
+                                              ensure_ascii=False))
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length).decode("utf-8", "replace") if length else "{}"
         try:
@@ -1189,6 +1965,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/retry":
             op = q.get("op", [""])[0]
             return self._send(200, json.dumps(api_post(api, f"/v1/default/banks/{qb}/operations/{urllib.parse.quote(op)}/retry"), ensure_ascii=False))
+        if path == "/api/ui":
+            return self._send(200, json.dumps({"ok": True, "ui": {"background": save_ui(body)}},
+                                              ensure_ascii=False))
+        if path == "/api/ui/image/delete":
+            return self._send(200, json.dumps(delete_background((body or {}).get("name") or q.get("name", [""])[0]),
+                                              ensure_ascii=False))
         return self._send(404, json.dumps({"detail": "Not Found"}))
 
 
@@ -1201,6 +1983,8 @@ def main():
     ap.add_argument("--cp", default=DEFAULT_CP, help="官方 Control Plane 地址，用于 iframe 内嵌与跳转链接")
     ap.add_argument("--allow-remote-write", action="store_true",
                     help="放开远程写操作（重试/反思/取消）；默认仅本机可写，远程只读")
+    ap.add_argument("--allow-remote-bridge", action="store_true",
+                    help="只放开 dsh 桥的 sync/harvest 给远程（手机）；重试/反思仍限本机")
     ap.add_argument("--access-key", default=None,
                     help="远程访问密钥；默认读密钥文件（可由 HS_DASH_KEY_FILE 指定），本机免密")
     args = ap.parse_args()
@@ -1210,6 +1994,7 @@ def main():
     Handler.default_bank = args.bank or cfg_bank
     Handler.cp_url = args.cp.rstrip("/")
     Handler.allow_remote_write = args.allow_remote_write
+    Handler.allow_remote_bridge = args.allow_remote_bridge
     Handler.access_key = (args.access_key if args.access_key is not None else load_access_key()).strip()
 
     global SHOW_LAN_HINT
@@ -1217,7 +2002,8 @@ def main():
 
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"[hindsight-dashboard] http://{args.host}:{args.port} → API {Handler.api_base} · 库 {Handler.default_bank}"
-          f" · Control Plane {Handler.cp_url} · 远程密钥门 {'开' if Handler.access_key else '关'} · 远程写 {'允许' if Handler.allow_remote_write else '只读'}",
+          f" · Control Plane {Handler.cp_url} · 远程密钥门 {'开' if Handler.access_key else '关'} · 远程写 {'允许' if Handler.allow_remote_write else '只读'}"
+          f" · 远程桥 {'允许' if Handler.allow_remote_bridge else '只读'}",
           flush=True)
     try:
         srv.serve_forever()

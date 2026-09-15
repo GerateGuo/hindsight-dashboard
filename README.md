@@ -35,10 +35,15 @@ This project fills the gap between them: a lightweight aggregation + operations 
 | **Operations** | Async task queue with status filters, **one-click retry of failed operations**, cancel pending ones |
 | **Config** | Bank profile, mission, directives, retention/consolidation parameters (read-only) |
 | **Official UI** | The official Control Plane embedded via iframe |
+| **Appearance** | Custom wallpaper gallery: drag in several images at once (PNG / JPEG / WebP / GIF / AVIF, type decided by magic bytes, 12 MB each), then tune mask depth / blur / card opacity / 9-point anchoring. Prefs live in `dashboard-ui.json`, images in `backgrounds/` |
+| **dsh bridge** _(optional)_ | Hermes ↔ `dsh` bridge at a glance: shared-snapshot size and diff, recently harvested task results, cron status, plus local-only "run now" buttons. The tab hides itself when the bridge is not installed (the default) |
 
 ![graph](docs/screenshot-graph.png)
 
 ![ops](docs/screenshot-ops.png)
+Small screens (≤560px) turn every data table into a card list, and the desktop skin follows the same GitHub-Dark palette as its sibling relay panel.
+
+![appearance](docs/screenshot-appearance.png)
 
 ## Quick start
 
@@ -68,12 +73,18 @@ If you use [Hermes Agent](https://github.com/NousResearch/hermes-agent), the def
 --cp CP                      official Control Plane URL, for the embedded tab + links
 --access-key KEY             remote access key (or use the key file)
 --allow-remote-write         let non-local clients trigger retry / reflect / cancel
+--allow-remote-bridge        let non-local clients trigger only the bridge sync / harvest
 ```
 
 | Env var | Default | Purpose |
 |---|---|---|
 | `HS_DASH_CONFIG_JSON` | `~/.hermes/hindsight/config.json` | optional config used to infer `api_url` / `bank_id` |
 | `HS_DASH_KEY_FILE` | `~/.hermes/hindsight/access-key.txt` | file holding the remote access key |
+| `HS_DASH_UI_DIR` | `~/.hermes/hindsight` | where appearance prefs (`dashboard-ui.json`) and `backgrounds/` live |
+| `HS_DASH_BRIDGE_PY` | `~/agent-bridge/agent_bridge.py` | bridge entry point — the tab hides itself while this file is missing |
+| `HS_DASH_BRIDGE_STATE` / `_LOG` / `_SNAPSHOT` | `~/.agent-bridge/state.json` · `bridge.log` · `~/.dsh/AGENTS.md` | bridge state / log / shared snapshot |
+| `HS_DASH_BRIDGE_SYNC_SH` / `_HARVEST_SH` | `~/.hermes/scripts/agent_bridge_{sync,harvest}.sh` | the only two scripts the bridge buttons may run |
+| `HS_DASH_CRON_STORE` | `~/.hermes/cron/jobs.json` | read-only cron status for the bridge tab |
 
 ## Security model
 
@@ -102,7 +113,7 @@ The dashboard is a thin server-side proxy plus one static page. It calls these H
 /v1/default/banks/{bank}/profile · config · directives
 ```
 
-Own routes: `/api/summary`, `/api/memories`, `/api/entities`, `/api/graph`, `/api/ops`, `/api/llm-requests`, `/api/config`, `/api/cancel` (GET) and `/api/recall`, `/api/reflect`, `/api/retry` (POST). Deep links: `#overview`, `#recall`, `#memories`, `#graph`, `#usage`, `#ops`, `#config`, `#official`. You can also run a query straight from the URL:
+Own routes: `/api/summary`, `/api/memories`, `/api/entities`, `/api/graph`, `/api/ops`, `/api/llm-requests`, `/api/config`, `/api/cancel`, `/api/ui`, `/api/bridge`, `/bg/<name>` (GET) and `/api/recall`, `/api/reflect`, `/api/retry`, `/api/ui`, `/api/ui/image`, `/api/ui/image/delete`, `/api/bridge-action` (POST). Deep links: `#overview`, `#recall`, `#memories`, `#graph`, `#usage`, `#ops`, `#bridge`, `#appearance`, `#config`, `#official`. You can also run a query straight from the URL:
 
 ```
 http://localhost:8990/?q=deployment+timeouts&mode=recall&budget=low#recall
@@ -122,8 +133,9 @@ All screenshots in this README were produced against that mock.
 ### Tests
 
 `dev/smoke_test.py` starts the mock API plus a dashboard instance and exercises every
-endpoint the UI depends on, then unit-checks the access-key logic. No dependencies, no
-network access, ~15 seconds:
+endpoint the UI depends on (including the wallpaper gallery, the path-traversal guard and the
+position-anchoring regression) plus the access-key logic. 38 checks, no dependencies, no network
+access, ~15 seconds:
 
 ```bash
 python3 dev/smoke_test.py
@@ -138,6 +150,9 @@ this test green and dependency-free.
 - **`period` values.** `memories-timeseries` supports `7d` / `30d` / `90d`; an unsupported value like `14d` silently falls back to `7d`.
 - **launchd caches plists.** On macOS, editing a LaunchAgent plist and running `launchctl kickstart -k` does **not** reload environment variables — use `launchctl bootout` + `launchctl bootstrap`.
 - **Iframe embedding works** because the official Control Plane sends no `X-Frame-Options` / `frame-ancestors` — if that changes upstream, the "Official UI" tab will need a link instead.
+- **Wallpaper uploads and the bridge buttons are write operations.** They follow the same rule as
+  retry / reflect: **local-only by default**. `--allow-remote-bridge` opens *just* the bridge's sync /
+  harvest to the LAN; `--allow-remote-write` opens everything.
 - **Plain HTTP.** The key travels in cleartext over your LAN. If that matters, bind to a VPN interface (e.g. Tailscale) or put it behind TLS.
 
 ## 中文文档 / Chinese docs

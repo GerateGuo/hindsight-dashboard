@@ -35,10 +35,15 @@
 | **操作诊断** | 异步任务队列（按状态筛选）、**失败操作一键重试**、取消排队中的任务 |
 | **配置** | 记忆库档案、mission、directives、保留与合并参数（只读） |
 | **官方界面** | 用 iframe 内嵌的官方 Control Plane |
+| **外观** | 自定义壁纸图库：一次拖进多张图（PNG / JPEG / WebP / GIF / AVIF，按魔数判类型，单张 12 MB），再调遮罩深度 / 模糊 / 卡片不透明度 / 九宫格对齐。偏好存 `dashboard-ui.json`，图片存 `backgrounds/` |
+| **dsh 桥**（可选） | 一眼看清 Hermes ↔ `dsh` 的桥：共享快照的大小与差异、最近回收的任务结论、cron 状态，以及仅限本机的「立即运行」按钮。没装桥时这个标签会自动隐藏（默认如此） |
 
 ![实体图谱](docs/screenshot-graph.png)
 
 ![操作诊断](docs/screenshot-ops.png)
+窄屏（≤560px）下所有数据表会自动变成卡片式；桌面皮肤与姊妹项目中转站面板同一套 GitHub Dark 色板。
+
+![外观](docs/screenshot-appearance.png)
 
 ## 快速开始
 
@@ -68,12 +73,18 @@ python3 hindsight-dashboard.py --api http://192.168.1.10:8988 --bank my-bank --p
 --cp CP                      官方 Control Plane 地址，用于内嵌标签页与跳转链接
 --access-key KEY             远程访问密钥（也可以放密钥文件里）
 --allow-remote-write         允许非本机客户端触发重试 / 反思 / 取消
+--allow-remote-bridge        只允许非本机客户端触发桥的 sync / harvest
 ```
 
 | 环境变量 | 默认值 | 作用 |
 |---|---|---|
 | `HS_DASH_CONFIG_JSON` | `~/.hermes/hindsight/config.json` | 可选配置，用于推断 `api_url` / `bank_id` |
 | `HS_DASH_KEY_FILE` | `~/.hermes/hindsight/access-key.txt` | 存放远程访问密钥的文件 |
+| `HS_DASH_UI_DIR` | `~/.hermes/hindsight` | 外观偏好（`dashboard-ui.json`）与 `backgrounds/` 所在目录 |
+| `HS_DASH_BRIDGE_PY` | `~/agent-bridge/agent_bridge.py` | 桥的入口程序——文件不存在时该标签页自动隐藏 |
+| `HS_DASH_BRIDGE_STATE` / `_LOG` / `_SNAPSHOT` | `~/.agent-bridge/state.json` · `bridge.log` · `~/.dsh/AGENTS.md` | 桥的状态 / 日志 / 共享快照 |
+| `HS_DASH_BRIDGE_SYNC_SH` / `_HARVEST_SH` | `~/.hermes/scripts/agent_bridge_{sync,harvest}.sh` | 桥按钮唯一允许执行的两个脚本 |
+| `HS_DASH_CRON_STORE` | `~/.hermes/cron/jobs.json` | 桥标签页读取 cron 状态（只读） |
 
 ## 安全模型
 
@@ -121,7 +132,7 @@ python3 hindsight-dashboard.py --api http://localhost:8899 --bank atlas --port 8
 
 ### 测试
 
-`dev/smoke_test.py` 会起一个 mock API 加一个面板实例，把界面依赖的每个接口都打一遍，再对访问密钥的判定逻辑做单元校验。零依赖、不访问外网，约 15 秒：
+`dev/smoke_test.py` 会起一个 mock API 加一个面板实例，把界面依赖的每个接口都打一遍（含壁纸图库、路径穿越防护、位置对齐的回归用例），再对访问密钥的判定逻辑做单元校验。共 38 项，零依赖、不访问外网，约 15 秒：
 
 ```bash
 python3 dev/smoke_test.py
@@ -135,6 +146,8 @@ CI 跑的就是它，覆盖 Python 3.9 / 3.11 / 3.13。欢迎贡献——请保�
 - **`period` 取值范围。** `memories-timeseries` 只支持 `7d` / `30d` / `90d`；传 `14d` 这类不支持的值得不到报错，会被**静默降级成 `7d`**。
 - **launchd 会缓存 plist。** macOS 上改完 LaunchAgent 的 plist，只跑 `launchctl kickstart -k` **不会**重新加载环境变量——要用 `launchctl bootout` + `launchctl bootstrap`。
 - **iframe 内嵌可行**，因为官方 Control Plane 没有下发 `X-Frame-Options` / `frame-ancestors`；如果上游哪天加了，这个「官方界面」标签页就得改回用跳转链接。
+- **壁纸上传与桥按钮属于写操作。** 与重试 / 反思同一套规则：**默认只有本机能做**。`--allow-remote-bridge`
+  只放开桥的 sync / harvest；`--allow-remote-write` 才是全都放开。
 - **明文 HTTP。** 密钥在局域网里是明文传输的。如果在意，就把服务绑到 VPN 网卡（例如 Tailscale），或者在前面套一层 TLS。
 
 ## 许可证
